@@ -39,13 +39,16 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "pennychallenge",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Short: "Automated (reversed) penny challenge",
+	Long: `The penny challenge involves saving 1p on the first day of the year,
+2p on the second day of the year, 3p on the third day of the year, and so on.
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+pennychallenge implements the reversed penny challenge automatically using the
+Monzo API to save the correct amount into a pot. This can then be run on a daily
+schedule using a functions as a service provider (e.g. Azure Functions).
+
+The advantage of hte reversed penny challenge is that it avoids the maximum
+savings occurring during December, which is when spending is highest.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
@@ -63,14 +66,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pennychallenge.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 // initConfig reads in config file and ENV variables if set.
