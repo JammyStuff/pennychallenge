@@ -67,6 +67,9 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pennychallenge.yaml)")
+
+	rootCmd.PersistentFlags().StringP("access-token", "A", "", "Monzo account access token")
+	viper.BindPFlag("access_token", rootCmd.PersistentFlags().Lookup("access-token"))
 }
 
 // initConfig reads in config file and ENV variables if set.
