@@ -23,48 +23,13 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package cmd
+package monzo
 
-import (
-	"fmt"
-	"os"
-
-	"github.com/jammystuff/pennychallenge/monzo"
-
-	"github.com/olekukonko/tablewriter"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-)
-
-// accountsCmd represents the accounts command
-var accountsCmd = &cobra.Command{
-	Use:   "accounts",
-	Short: "List Monzo accounts",
-	Long: `Lists your Monzo accounts. The account ID is used later to specify
-the account to save from.`,
-	Run: runAccounts,
+type Pot struct {
+	ID   string
+	Name string
 }
 
-func init() {
-	rootCmd.AddCommand(accountsCmd)
-}
-
-func runAccounts(cmd *cobra.Command, args []string) {
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"ID", "Description", "Account Type"})
-
-	token := viper.GetString("access_token")
-	client := monzo.NewClient(token)
-
-	accounts, err := client.Accounts()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	for _, account := range *accounts {
-		table.Append([]string{account.ID, account.Description, account.Type().String()})
-	}
-
-	table.Render()
+type PotList struct {
+	Pots []Pot
 }

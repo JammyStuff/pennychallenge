@@ -30,40 +30,38 @@ import (
 	"os"
 
 	"github.com/jammystuff/pennychallenge/monzo"
-
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-// accountsCmd represents the accounts command
-var accountsCmd = &cobra.Command{
-	Use:   "accounts",
-	Short: "List Monzo accounts",
-	Long: `Lists your Monzo accounts. The account ID is used later to specify
-the account to save from.`,
-	Run: runAccounts,
+// potsCmd represents the pots command
+var potsCmd = &cobra.Command{
+	Use:   "pots",
+	Short: "List Monzo pots",
+	Long:  `Lists your Monzo pots. The pot ID is used later to specify the pot to save to.`,
+	Run:   runPots,
 }
 
 func init() {
-	rootCmd.AddCommand(accountsCmd)
+	rootCmd.AddCommand(potsCmd)
 }
 
-func runAccounts(cmd *cobra.Command, args []string) {
+func runPots(cmd *cobra.Command, args []string) {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"ID", "Description", "Account Type"})
+	table.SetHeader([]string{"ID", "Name"})
 
 	token := viper.GetString("access_token")
 	client := monzo.NewClient(token)
 
-	accounts, err := client.Accounts()
+	pots, err := client.Pots()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	for _, account := range *accounts {
-		table.Append([]string{account.ID, account.Description, account.Type().String()})
+	for _, pot := range *pots {
+		table.Append([]string{pot.ID, pot.Name})
 	}
 
 	table.Render()

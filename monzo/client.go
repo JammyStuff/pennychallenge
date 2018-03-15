@@ -79,3 +79,36 @@ func (c *Client) Accounts() (*[]Account, error) {
 
 	return &accountList.Accounts, nil
 }
+
+func (c *Client) Pots() (*[]Pot, error) {
+	req, err := http.NewRequest("GET", baseURL+"/pots", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", "Bearer "+c.accessToken)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		msg := fmt.Sprintf("/pots returned %d status code", resp.StatusCode)
+		return nil, errors.New(msg)
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var potList PotList
+	err = json.Unmarshal(body, &potList)
+	if err != nil {
+		return nil, err
+	}
+
+	return &potList.Pots, nil
+}
