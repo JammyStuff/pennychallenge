@@ -31,6 +31,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 )
 
 const baseURL = "https://api.monzo.com"
@@ -78,6 +81,69 @@ func (c *Client) Accounts() (*[]Account, error) {
 	}
 
 	return &accountList.Accounts, nil
+}
+
+func (c *Client) Balance(account *Account) (*Balance, error) {
+	url := fmt.Sprintf("%s/balance?account_id=%s", baseURL, account.ID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Authorization", "Bearer "+c.accessToken)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		msg := fmt.Sprintf("/balance returned %d status code", resp.StatusCode)
+		return nil, errors.New(msg)
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var balance Balance
+	err = json.Unmarshal(body, &balance)
+	if err != nil {
+		return nil, err
+	}
+
+	return &balance, nil
+}
+
+func (c *Client) DepositToPot(pot *Pot, source *Account, amount int64, id string) error {
+	values := url.Values{}
+	values.Add("source_account_id", source.ID)
+	values.Add("amount", strconv.FormatInt(amount, 10))
+	values.Add("dedupe_id", id)
+	body := strings.NewReader(values.Encode())
+
+	url := fmt.Sprintf("%s/pots/%s/deposit", baseURL, pot.ID)
+	req, err := http.NewRequest("PUT", url, body)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Authorization", "Bearer "+c.accessToken)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		msg := fmt.Sprintf("/pots/deposit returned %d status code", resp.StatusCode)
+		return errors.New(msg)
+	}
+
+	return nil
 }
 
 func (c *Client) Pots() (*[]Pot, error) {
