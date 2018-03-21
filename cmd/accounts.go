@@ -29,11 +29,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/viper"
+
 	"github.com/jammystuff/pennychallenge/monzo"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 // accountsCmd represents the accounts command
@@ -53,7 +54,21 @@ func runAccounts(cmd *cobra.Command, args []string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"ID", "Description", "Account Type"})
 
-	token := viper.GetString("access_token")
+	t, err := readToken()
+	if err != nil {
+		fmt.Printf("Error reading access token: %v\n", err)
+		os.Exit(1)
+	}
+
+	clientID := viper.GetString("client_id")
+	clientSecret := viper.GetString("client_secret")
+	refresh, err := refreshToken(clientID, clientSecret, t)
+	if err != nil {
+		fmt.Printf("Error refreshing access token: %v\n", err)
+		os.Exit(1)
+	}
+
+	token := refresh.AccessToken
 	client := monzo.NewClient(token)
 
 	accounts, err := client.Accounts()

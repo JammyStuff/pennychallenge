@@ -75,14 +75,17 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.pennychallenge.yaml)")
 
-	rootCmd.PersistentFlags().StringP("access-token", "A", "", "Monzo account access token")
-	viper.BindPFlag("access_token", rootCmd.PersistentFlags().Lookup("access-token"))
-
 	rootCmd.Flags().StringP("source-account", "s", "", "Account ID to save from")
 	viper.BindPFlag("source_account", rootCmd.Flags().Lookup("source-account"))
 
 	rootCmd.Flags().StringP("destination-pot", "d", "", "Pot ID to save to")
 	viper.BindPFlag("destination_pot", rootCmd.Flags().Lookup("destination-pot"))
+
+	rootCmd.PersistentFlags().StringP("client-id", "I", "", "Monzo API client ID")
+	viper.BindPFlag("client_id", rootCmd.PersistentFlags().Lookup("client-id"))
+
+	rootCmd.PersistentFlags().StringP("client-secret", "S", "", "Monzo API client secret")
+	viper.BindPFlag("client_secret", rootCmd.PersistentFlags().Lookup("client-secret"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -183,7 +186,21 @@ func getPot(id string, c *monzo.Client) (*monzo.Pot, error) {
 }
 
 func runRoot(cmd *cobra.Command, args []string) {
-	token := viper.GetString("access_token")
+	t, err := readToken()
+	if err != nil {
+		fmt.Println("Error reading access token")
+		os.Exit(1)
+	}
+
+	clientID := viper.GetString("client_id")
+	clientSecret := viper.GetString("client_secret")
+	refresh, err := refreshToken(clientID, clientSecret, t)
+	if err != nil {
+		fmt.Printf("Error refreshing access token: %v\n", err)
+		os.Exit(1)
+	}
+
+	token := refresh.AccessToken
 	client := monzo.NewClient(token)
 
 	fmt.Print("Getting account... ")

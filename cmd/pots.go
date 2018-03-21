@@ -51,7 +51,21 @@ func runPots(cmd *cobra.Command, args []string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"ID", "Name"})
 
-	token := viper.GetString("access_token")
+	t, err := readToken()
+	if err != nil {
+		fmt.Println("Error reading access token")
+		os.Exit(1)
+	}
+
+	clientID := viper.GetString("client_id")
+	clientSecret := viper.GetString("client_secret")
+	refresh, err := refreshToken(clientID, clientSecret, t)
+	if err != nil {
+		fmt.Printf("Error refreshing access token: %v\n", err)
+		os.Exit(1)
+	}
+
+	token := refresh.AccessToken
 	client := monzo.NewClient(token)
 
 	pots, err := client.Pots()
